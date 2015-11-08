@@ -5,35 +5,30 @@
 #include <sched.h>
 
 
+#define SIZE 512
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <papi.h>
-
-
-#define SIZE 512
-
-#define EVENT 1
-#define ALGORITHM 1
-
-int mm(double first[][SIZE], double second[][SIZE], double multiply[][SIZE])
-{
-    int i,j,k;
-    double sum = 0;
-    for (i = 0; i < SIZE; i++) { //rows in multiply
-        for (j = 0; j < SIZE; j++) { //columns in multiply
-            for (k = 0; k < SIZE; k++) { //columns in first and rows in second
-                sum = sum + first[i][k]*second[k][j];
-            }
-            multiply[i][j] = sum;
-            sum = 0;
-        }
-    }
-    return 0;
-}
-
+#include "mm.h"
 
 int main() {
+
+    #ifndef EVENT
+        #define EVENT 1
+    #endif
+
+    int (*algorithm)(double first[][SIZE], double second[][SIZE], double multiply[][SIZE]) = NULL;
+    #ifndef ALGORITHM
+        #define ALGORITHM 1
+    #endif
+
+    switch (ALGORITHM){
+        case 1:
+                algorithm = &mm1;
+            break;
+    }
 
     int i, j;
     double first[SIZE][SIZE];
@@ -94,7 +89,7 @@ int main() {
         }
     }
 
-    mm(first,second,multiply);
+    algorithm(first,second,multiply);
 
     /* stop counters */
     if (papi_supported) {
