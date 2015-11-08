@@ -2,7 +2,7 @@
 #include <stdlib.h>
  
 
-// #define SIZE 512
+#define SIZE 1024
 
 #include <sys/time.h>
 #include <time.h>
