@@ -7,8 +7,13 @@
 int main() {
 
     /* init lib */
-    int events[5] = {PAPI_FP_OPS, PAPI_LD_INS, PAPI_SR_INS, PAPI_L1_DCM, PAPI_L2_TCM};
-    long long values[5] = {0,};
+    int events[4] = {
+            PAPI_STL_ICY, //Cycles with no instruction issue
+            PAPI_L2_DCM, //L2 Data Cache misses
+            PAPI_L2_DCH, //L2 Data Cache hits
+            PAPI_FP_OPS //number of floating point operations
+            };
+    long long values[4] = {0,0,0,0};
     int eventSet = PAPI_NULL;
     int papi_err;
     int i;
@@ -28,7 +33,7 @@ int main() {
         fprintf(stderr, "Could not create event set: %s\n", PAPI_strerror(papi_err));
     }
 
-    for (i=0; i<5; ++i) {
+    for (i=0; i<4; ++i) {
         if ((papi_err = PAPI_add_event(eventSet, events[i])) != PAPI_OK ) {
             fprintf(stderr, "Could not add event: %s\n", PAPI_strerror(papi_err));
         }
@@ -36,7 +41,6 @@ int main() {
 
 
     /* start counters */
-
     if (papi_supported) {
         if ((papi_err = PAPI_start(eventSet)) != PAPI_OK) {
             fprintf(stderr, "Could not start counters: %s\n", PAPI_strerror(papi_err));
@@ -44,24 +48,16 @@ int main() {
     }
 
 
-    /* stop conuters */
 
-
+    /* stop counters */
     if (papi_supported) {
         if ((papi_err = PAPI_stop(eventSet, values)) != PAPI_OK) {
             fprintf(stderr, "Could not get values: %s\n", PAPI_strerror(papi_err));
         }
-        // PAPI_FP_OPS
-        // PAPI_LD_INS
-        // PAPI_SR_INS
-        // PAPI_L1_DCM
-        // PAPI_L2_TCM
         printf("Performance counters for factorization stage: \n");
-        printf("\tFP OPS: %ld\n", values[0]);
-        printf("\tLD INS: %ld\n", values[1]);
-        printf("\tSR INS: %ld\n", values[2]);
-        printf("\tL1 DCM: %ld\n", values[3]);
-        printf("\tL2 TCM: %ld\n", values[4]);
-
+        printf("\tSTL ICY (Cycles with no instruction issue): %ld\n", values[0]);
+        printf("\tL2 DCM              (L2 Data Cache Misses): %ld\n", values[1]);
+        printf("\tL2 DCH                (L2 Data Cache Hits): %ld\n", values[2]);
+        printf("\tFP OPS        (Floating points operations): %ld\n", values[3]);
     }
 }
