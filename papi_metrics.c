@@ -5,8 +5,6 @@
 #include <sched.h>
 
 
-#define SIZE 512
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -24,6 +22,38 @@ int main() {
         case 1:
             algorithm = &mm1;
             break;
+        case 2:
+            algorithm = &mm2;
+            break;
+        case 3:
+            algorithm = &mm3;
+            break;
+        case 4:
+            algorithm = &mm4;
+            break;
+        case 5:
+            algorithm = &mm5;
+            break;
+        case 51:
+            algorithm = &mm51;
+            break;
+        case 52:
+            algorithm = &mm52;
+            break;
+        case 6:
+            algorithm = &mm6;
+            break;
+        case 7:
+            algorithm = &mm7;
+            break;
+        case 8:
+            algorithm = &mm8;
+            break;
+        case 9:
+            algorithm = &mm9;
+            break;
+        default:
+            algorithm = &mm1;
     }
 
     int i, j;
@@ -87,11 +117,25 @@ int main() {
 
     algorithm(first,second,multiply);
 
+
     /* stop counters */
     if (papi_supported) {
         if ((papi_err = PAPI_stop(eventSet, values)) != PAPI_OK) {
             fprintf(stderr, "Could not get values: %s\n", PAPI_strerror(papi_err));
         }
+
+        FILE *fp;
+        char filename[10];
+        sprintf(filename, "results/algo%d.txt", ALGORITHM);
+        fp = fopen(filename, "w+");
+        if (fp == NULL) perror("Error while saving results to file");
+        fprintf(fp, "1: %lld\n", values[0]);
+        fprintf(fp, "2: %lld\n", values[1]);
+        fprintf(fp, "3: %lld\n", values[2]);
+        fprintf(fp, "4: %lld\n", values[3]);
+        fclose(fp);
+
+
         printf("Performance counters for factorization stage: \n");
         printf("\tSTL ICY (Cycles with no instruction issue): %lld\n", values[0]);
         printf("\tL2 DCM              (L2 Data Cache Misses): %lld\n", values[1]);
