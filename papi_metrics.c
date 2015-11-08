@@ -15,10 +15,6 @@
 
 int main() {
 
-    #ifndef EVENT
-        #define EVENT 1
-    #endif
-
     int (*algorithm)(double first[][SIZE], double second[][SIZE], double multiply[][SIZE]) = NULL;
     #ifndef ALGORITHM
         #define ALGORITHM 1
@@ -26,7 +22,7 @@ int main() {
 
     switch (ALGORITHM){
         case 1:
-                algorithm = &mm1;
+            algorithm = &mm1;
             break;
     }
 
