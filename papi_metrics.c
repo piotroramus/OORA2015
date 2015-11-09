@@ -124,7 +124,7 @@ int main() {
             fprintf(stderr, "Could not get values: %s\n", PAPI_strerror(papi_err));
         }
 
-        int save_to_file = 1;
+        int save_to_file = 0;
         if (save_to_file > 0){
             FILE *fp;
             char filename[50];
@@ -139,6 +139,7 @@ int main() {
         }
 
         printf("Performance counters for factorization stage: \n");
+        printf("\tAlgorithm: %d\n", ALGORITHM);
         printf("\tSTL ICY (Cycles with no instruction issue): %lld\n", values[0]);
         printf("\tL2 DCM              (L2 Data Cache Misses): %lld\n", values[1]);
         printf("\tL2 ICH        (L2 Instructions Cache Hits): %lld\n", values[2]);
