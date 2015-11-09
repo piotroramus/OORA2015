@@ -56,6 +56,7 @@ int main() {
             algorithm = &mm1;
     }
 
+    int multiple_events = false;
     int i, j;
     double first[SIZE][SIZE];
     double second[SIZE][SIZE];
@@ -124,7 +125,7 @@ int main() {
             fprintf(stderr, "Could not get values: %s\n", PAPI_strerror(papi_err));
         }
 
-        int save_to_file = 0;
+        int save_to_file = 1;
         if (save_to_file > 0){
             FILE *fp;
             char filename[10];
