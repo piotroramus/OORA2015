@@ -56,6 +56,10 @@ int main() {
             algorithm = &mm1;
     }
 
+    #ifndef EVENT
+        #define EVENT 1
+    #endif
+
     int i, j;
     double first[SIZE][SIZE];
     double second[SIZE][SIZE];
@@ -80,10 +84,17 @@ int main() {
     int events[4] = {
             PAPI_STL_ICY, //Cycles with no instruction issue
             PAPI_L2_DCM, //L2 data cache misses
-            PAPI_L2_ICH, //L2 instruction cache hits
-            PAPI_TOT_INS //Instructions completed
+            PAPI_L2_DCH, //L2 data cache hits
+            PAPI_FP_OPS //Floating point operations
     };
-    long long values[4] = {0,0,0,0};
+    char* event_names[4] = {
+            "Cycles with no instruction issue",
+            "L2 data cache misses",
+            "L2 data cache hits",
+            "Floating point operations"
+    };
+
+    long long values[1] = {0};
     int eventSet = PAPI_NULL;
     int papi_err;
     bool papi_supported = true;
@@ -102,10 +113,8 @@ int main() {
         fprintf(stderr, "Could not create event set: %s\n", PAPI_strerror(papi_err));
     }
 
-    for (i=0; i<4; ++i) {
-        if ((papi_err = PAPI_add_event(eventSet, events[i])) != PAPI_OK ) {
-            fprintf(stderr, "Could not add event %d: %s\n", i, PAPI_strerror(papi_err));
-        }
+    if ((papi_err = PAPI_add_event(eventSet, events[EVENT])) != PAPI_OK ) {
+        fprintf(stderr, "Could not add event %d: %s\n", i, PAPI_strerror(papi_err));
     }
 
     /* start counters */
@@ -127,21 +136,15 @@ int main() {
         int save_to_file = 1;
         if (save_to_file > 0){
             FILE *fp;
-            char filename[50];
-            sprintf(filename, "results/multiple_events/algo%d.txt", ALGORITHM);
+            char filename[60];
+            sprintf(filename, "results/single_events/event%d_algo%d.txt", EVENT, ALGORITHM);
             fp = fopen(filename, "w+");
             if (fp == NULL) perror("Error while saving results to file");
-            fprintf(fp, "1: %lld\n", values[0]);
-            fprintf(fp, "2: %lld\n", values[1]);
-            fprintf(fp, "3: %lld\n", values[2]);
-            fprintf(fp, "4: %lld\n", values[3]);
+            fprintf(fp, "%lld", values[0]);
             fclose(fp);
         }
 
         printf("Performance counters for factorization stage: \n");
-        printf("\tSTL ICY (Cycles with no instruction issue): %lld\n", values[0]);
-        printf("\tL2 DCM              (L2 Data Cache Misses): %lld\n", values[1]);
-        printf("\tL2 ICH        (L2 Instructions Cache Hits): %lld\n", values[2]);
-        printf("\tTOT INS           (Instructions completed): %lld\n", values[3]);
+        printf("\t%s: %lld\n", event_names[EVENT], values[0]);
     }
 }

@@ -16,7 +16,7 @@ event3 = {"sn": "PAPI_L2_ICH", "title": "PAPI_L2_ICH: L2 instruction cache hits"
 event4 = {"sn": "PAPI_TOT_INS", "title": "PAPI_TOT_INS: Instructions completed", "values": []}
 
 for algo in algorithms:
-    with open("results/multiple_events/algo" + str(algo) + ".txt") as f:
+    with open("results/multpile_events/algo" + str(algo) + ".txt") as f:
         (_, e1) = f.next().strip().split(':')
         (_, e2) = f.next().strip().split(':')
         (_, e3) = f.next().strip().split(':')
