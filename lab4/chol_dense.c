@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 #include "chol_dense.h"
+#include "clock.h"
 
 /* for Fortran - j*n + i */
 //#define IDX(i, j, n)	(((i) * (n)) + (j))
@@ -54,9 +55,14 @@ main()
     A[IDX(1, 0, n)] = 12.0;  A[IDX(1, 1, n)] = 37.0;  A[IDX(1, 2, n)] = -43.0;
     A[IDX(2, 0, n)] = -16.0; A[IDX(2, 1, n)] = -43.0; A[IDX(2, 2, n)] = 98.0;
 
-    if (chol(A, 3)) {
+    double start_time = dclock();
+    int result = chol(A, 3);
+    double end_time = dclock();
+
+    if (result != 0) {
         fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
     } else {
+        fprintf(stdout, "Execution time: %le\n", end_time - start_time);
         fprintf(stdout, "Tri(L) = \n");
         for (i = 0; i < 3; i++) {
             for (j = 0; j <= i; j++)
