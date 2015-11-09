@@ -124,17 +124,19 @@ int main() {
             fprintf(stderr, "Could not get values: %s\n", PAPI_strerror(papi_err));
         }
 
-        FILE *fp;
-        char filename[10];
-        sprintf(filename, "results/algo%d.txt", ALGORITHM);
-        fp = fopen(filename, "w+");
-        if (fp == NULL) perror("Error while saving results to file");
-        fprintf(fp, "1: %lld\n", values[0]);
-        fprintf(fp, "2: %lld\n", values[1]);
-        fprintf(fp, "3: %lld\n", values[2]);
-        fprintf(fp, "4: %lld\n", values[3]);
-        fclose(fp);
-
+        int save_to_file = 0;
+        if (save_to_file > 0){
+            FILE *fp;
+            char filename[10];
+            sprintf(filename, "results/algo%d.txt", ALGORITHM);
+            fp = fopen(filename, "w+");
+            if (fp == NULL) perror("Error while saving results to file");
+            fprintf(fp, "1: %lld\n", values[0]);
+            fprintf(fp, "2: %lld\n", values[1]);
+            fprintf(fp, "3: %lld\n", values[2]);
+            fprintf(fp, "4: %lld\n", values[3]);
+            fclose(fp);
+        }
 
         printf("Performance counters for factorization stage: \n");
         printf("\tSTL ICY (Cycles with no instruction issue): %lld\n", values[0]);
