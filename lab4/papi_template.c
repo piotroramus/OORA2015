@@ -15,11 +15,9 @@
 #include <papi.h>
 
 #include "papi_template.h"
-#include "clock.h"
 
 
-#define EVENT 0
-int measure(int (*f)(double *A, unsigned int n), double *A, unsigned int n, Algo algorithm) {
+int measure(int (*f)(double *A, unsigned int n), double *A, unsigned int n, int event) {
 
     /* force program to run on a single CPU */
     cpu_set_t my_set;        /* Define your cpu_set bit mask. */
@@ -36,10 +34,10 @@ int measure(int (*f)(double *A, unsigned int n), double *A, unsigned int n, Algo
             PAPI_FP_OPS //Floating point operations
     };
     char* event_names[4] = {
-            "Cycles with no instruction issue",
-            "L2 data cache misses",
-            "L2 data cache hits",
-            "Floating point operations"
+            "Cycles with no instruction issue: ",
+            "L2 data cache misses:             ",
+            "L2 data cache hits:               ",
+            "Floating point operations:        "
     };
 
     long long values[1] = {0};
@@ -61,8 +59,8 @@ int measure(int (*f)(double *A, unsigned int n), double *A, unsigned int n, Algo
         fprintf(stderr, "Could not create event set: %s\n", PAPI_strerror(papi_err));
     }
 
-    if ((papi_err = PAPI_add_event(eventSet, events[EVENT])) != PAPI_OK ) {
-        fprintf(stderr, "Could not add event %d: %s\n", EVENT, PAPI_strerror(papi_err));
+    if ((papi_err = PAPI_add_event(eventSet, events[event])) != PAPI_OK ) {
+        fprintf(stderr, "Could not add event %d: %s\n", event, PAPI_strerror(papi_err));
     }
 
     /* start counters */
@@ -72,22 +70,7 @@ int measure(int (*f)(double *A, unsigned int n), double *A, unsigned int n, Algo
         }
     }
 
-    double start_time, end_time;
-    int result;
-
-    start_time = dclock();
-    result = f(A, n);
-    end_time = dclock();
-
-    if (algorithm == STANDARD)
-        fprintf(stdout, "Standard algorithm:\n");
-    else if (algorithm == OPTIMIZED)
-        fprintf(stdout, "Optimized algorithm:\n");
-
-    if (result != 0) {
-        fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
-    } else
-            fprintf(stdout, "Execution time:\t %le\n", end_time - start_time);
+    f(A, n);
 
     /* stop counters */
     if (papi_supported) {
@@ -99,13 +82,13 @@ int measure(int (*f)(double *A, unsigned int n), double *A, unsigned int n, Algo
         if (save_to_file > 0){
             FILE *fp;
             char filename[60];
-            sprintf(filename, "results/event%d.txt", EVENT);
+            sprintf(filename, "results/event%d.txt", event);
             fp = fopen(filename, "w+");
             if (fp == NULL) perror("Error while saving results to file");
             fprintf(fp, "%lld", values[0]);
             fclose(fp);
         }
 
-        printf("%s:\t %lld\n\n", event_names[EVENT], values[0]);
+        printf("%s\t %lld\n", event_names[event], values[0]);
     }
 }

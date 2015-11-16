@@ -10,6 +10,7 @@
 
 #include "chol_dense.h"
 #include "papi_template.h"
+#include "clock.h"
 
 
 #define IDX(i, j, n) (((j)+ (i)*(n)))
@@ -24,8 +25,9 @@ double* load_matrix(char* filename, int n);
 int main(){
 
     double *A, *B;
-    int i, j, n, ret;
+    int i, j, n, ret, result;
     char matrix_file[30];
+    double start_time, end_time;
 
     n = 500;
     sprintf(matrix_file, "input/matrix_%dx%d.txt", n, n);
@@ -33,10 +35,46 @@ int main(){
     A = load_matrix(matrix_file, n);
     B = load_matrix(matrix_file, n);
 
+    fprintf(stdout, "\n====================================================\n");
+    fprintf(stdout, "\nMatrix size: %d\n\n", n);
 
-    fprintf(stdout, "\nMatrix size: %d\n", n);
-    measure(chol, A, n, STANDARD);
-    measure(speed_chol, B, n, OPTIMIZED);
+    fprintf(stdout, "Standard algorithm:\n");
+    start_time = dclock();
+    result = chol(A, n);
+    end_time = dclock();
+
+    if (result != 0) {
+        fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
+        exit(2);
+    } else
+        fprintf(stdout, "Execution time:\t\t\t\t %le\n", end_time - start_time);
+
+
+    int event_type;
+    for (event_type = 0; event_type < 4; event_type++){
+        A = load_matrix(matrix_file, n);
+        measure(chol, A, n, event_type);
+    }
+
+
+    fprintf(stdout, "\nOptimized algorithm:\n");
+    start_time = dclock();
+    result = speed_chol(B, n);
+    end_time = dclock();
+
+    if (result != 0) {
+        fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
+        exit(2);
+    } else
+        fprintf(stdout, "Execution time:\t\t\t\t %le\n", end_time - start_time);
+
+    for (event_type = 0; event_type < 4; event_type++){
+        B = load_matrix(matrix_file, n);
+        measure(speed_chol, B, n, event_type);
+    }
+
+    fprintf(stdout, "\n");
+    fprintf(stdout, "====================================================\n");
 
     if (assert_matrix_equality(A, B, n)){
         printf("Algorithms differ in results!\n");
