@@ -14,6 +14,7 @@
 
 
 #define IDX(i, j, n) (((j)+ (i)*(n)))
+//#define IDX(i, j, n) ( (i) * ((i) + 1) / 2 + (j) )
 
 
 int chol(double *A, unsigned int n);
@@ -27,9 +28,11 @@ int main(){
     double *A, *B;
     int i, j, n, ret, result;
     char matrix_file[30];
-    double start_time, end_time;
+    double start_time, end_time, time;
+    double gflops_prefix, gflops;
 
     n = 1000;
+    gflops_prefix = (n * n * n * 1.0e-6) / 3.0;
     sprintf(matrix_file, "input/matrix_%dx%d.txt", n, n);
 
     A = load_matrix(matrix_file, n);
@@ -46,8 +49,11 @@ int main(){
     if (result != 0) {
         fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
         exit(2);
-    } else
-        fprintf(stdout, "Execution time:\t\t\t\t %le\n", end_time - start_time);
+    } else {
+        time = end_time - start_time;
+        fprintf(stdout, "Execution time:\t\t\t\t %le\n", time);
+        fprintf(stdout, "GFLOPS:\t\t\t\t\t %f\n", gflops_prefix / time);
+    }
 
 
     int event_type;
@@ -65,8 +71,11 @@ int main(){
     if (result != 0) {
         fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
         exit(2);
-    } else
-        fprintf(stdout, "Execution time:\t\t\t\t %le\n", end_time - start_time);
+    } else {
+        time = end_time - start_time;
+        fprintf(stdout, "Execution time:\t\t\t\t %le\n", time);
+        fprintf(stdout, "GFLOPS:\t\t\t\t\t %f\n", gflops_prefix / time);
+    }
 
     for (event_type = 0; event_type < 4; event_type++){
         B = load_matrix(matrix_file, n);
