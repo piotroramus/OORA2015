@@ -9,7 +9,7 @@
 #include <string.h>
 
 #include "chol_dense.h"
-#include "clock.h"
+#include "papi_template.h"
 
 
 #define IDX(i, j, n) (((j)+ (i)*(n)))
@@ -24,23 +24,19 @@ double* load_matrix(char* filename, int n);
 int main(){
 
     double *A, *B;
-    int i, j, n, ret, result1, result2;
+    int i, j, n, ret;
     char matrix_file[30];
-    double start_time1, end_time1, start_time2, end_time2;
 
-    n = 10;
+    n = 500;
     sprintf(matrix_file, "input/matrix_%dx%d.txt", n, n);
 
     A = load_matrix(matrix_file, n);
     B = load_matrix(matrix_file, n);
 
-    start_time1 = dclock();
-    result1 = chol(A, n);
-    end_time1 = dclock();
 
-    start_time2 = dclock();
-    result2 = speed_chol(B, n);
-    end_time2 = dclock();
+    fprintf(stdout, "\nMatrix size: %d\n", n);
+    measure(chol, A, n, STANDARD);
+    measure(speed_chol, B, n, OPTIMIZED);
 
     if (assert_matrix_equality(A, B, n)){
         printf("Algorithms differ in results!\n");
@@ -48,17 +44,6 @@ int main(){
         free(B);
         exit(1);
     }
-
-    if (result1 != 0) {
-        fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
-    } else
-        fprintf(stdout, "\nStandard algorithm execution time:\t %le\n", end_time1 - start_time1);
-
-    if (result2 != 0) {
-        fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
-    } else
-        fprintf(stdout, "Optimized algorithm execution time:\t %le\n\n", end_time2 - start_time2);
-
 
     free(A);
     free(B);
@@ -99,22 +84,39 @@ int speed_chol(double *A, unsigned int n){
     register unsigned int i;
     register unsigned int j;
     register unsigned int k;
+    register unsigned int local_size = n;
 
-    for (j = 0; j < n; j++) {
-        for (i = j; i < n; i++) {
-            for (k = 0; k < j; ++k) {
-                A[IDX(i, j, n)] -= A[IDX(i, k, n)] *
-                                   A[IDX(j, k, n)];
+    for (j = 0; j < local_size; j++) {
+        for (i = j; i < local_size; i++) {
+            if (j > 8)
+                for (k = 0; k < j;) {
+                    if (k < j - 8){
+                        A[IDX(i, j, local_size)] -= A[IDX(i, k, local_size)] * A[IDX(j, k, local_size)];
+                        A[IDX(i, j, local_size)] -= A[IDX(i, k + 1, local_size)] * A[IDX(j, k + 1, local_size)];
+                        A[IDX(i, j, local_size)] -= A[IDX(i, k + 2, local_size)] * A[IDX(j, k + 2, local_size)];
+                        A[IDX(i, j, local_size)] -= A[IDX(i, k + 3, local_size)] * A[IDX(j, k + 3, local_size)];
+                        A[IDX(i, j, local_size)] -= A[IDX(i, k + 4, local_size)] * A[IDX(j, k + 4, local_size)];
+                        A[IDX(i, j, local_size)] -= A[IDX(i, k + 5, local_size)] * A[IDX(j, k + 5, local_size)];
+                        A[IDX(i, j, local_size)] -= A[IDX(i, k + 6, local_size)] * A[IDX(j, k + 6, local_size)];
+                        A[IDX(i, j, local_size)] -= A[IDX(i, k + 7, local_size)] * A[IDX(j, k + 7, local_size)];
+                        k = k + 8;
+                    } else {
+                        A[IDX(i, j, local_size)] -= A[IDX(i, k, local_size)] * A[IDX(j, k, local_size)];
+                        k++;
+                    }
             }
+            // i <= 8
+            else for (k = 0; k < j; ++k)
+                    A[IDX(i, j, local_size)] -= A[IDX(i, k, local_size)] * A[IDX(j, k, local_size)];
         }
 
-        if (A[IDX(j, j, n)] < 0.0) {
+        if (A[IDX(j, j, local_size)] < 0.0) {
             return (1);
         }
 
-        A[IDX(j, j, n)] = sqrt(A[IDX(j, j, n)]);
-        for (i = j + 1; i < n; i++)
-            A[IDX(i, j, n)] /= A[IDX(j, j, n)];
+        A[IDX(j, j, local_size)] = sqrt(A[IDX(j, j, local_size)]);
+        for (i = j + 1; i < local_size; i++)
+            A[IDX(i, j, local_size)] /= A[IDX(j, j, local_size)];
     }
 
     return (0);

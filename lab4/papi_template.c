@@ -14,11 +14,12 @@
 #include <stdbool.h>
 #include <papi.h>
 
-
 #include "papi_template.h"
+#include "clock.h"
+
 
 #define EVENT 0
-int measure() {
+int measure(int (*f)(double *A, unsigned int n), double *A, unsigned int n, Algo algorithm) {
 
     /* force program to run on a single CPU */
     cpu_set_t my_set;        /* Define your cpu_set bit mask. */
@@ -71,8 +72,22 @@ int measure() {
         }
     }
 
-    //DO STH
-    //PUT CALCULATIONS HERE
+    double start_time, end_time;
+    int result;
+
+    start_time = dclock();
+    result = f(A, n);
+    end_time = dclock();
+
+    if (algorithm == STANDARD)
+        fprintf(stdout, "Standard algorithm:\n");
+    else if (algorithm == OPTIMIZED)
+        fprintf(stdout, "Optimized algorithm:\n");
+
+    if (result != 0) {
+        fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
+    } else
+            fprintf(stdout, "Execution time:\t %le\n", end_time - start_time);
 
     /* stop counters */
     if (papi_supported) {
@@ -91,7 +106,6 @@ int measure() {
             fclose(fp);
         }
 
-        printf("Performance counters for factorization stage: \n");
-        printf("\t%s: %lld\n", event_names[EVENT], values[0]);
+        printf("%s:\t %lld\n\n", event_names[EVENT], values[0]);
     }
 }
