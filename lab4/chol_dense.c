@@ -10,8 +10,7 @@
 #include "chol_dense.h"
 #include "clock.h"
 
-/* for Fortran - j*n + i */
-//#define IDX(i, j, n)	(((i) * (n)) + (j))
+
 #define IDX(i, j, n) (((j)+ (i)*(n)))
 
 int
@@ -42,6 +41,35 @@ chol(double *A, unsigned int n)
 }
 
 int
+speed_chol(double *A, unsigned int n)
+{
+
+    register unsigned int i;
+    register unsigned int j;
+    register unsigned int k;
+
+    for (j = 0; j < n; j++) {
+        for (i = j; i < n; i++) {
+            for (k = 0; k < j; ++k) {
+                A[IDX(i, j, n)] -= A[IDX(i, k, n)] *
+                                   A[IDX(j, k, n)];
+            }
+        }
+
+        if (A[IDX(j, j, n)] < 0.0) {
+            return (1);
+        }
+
+        A[IDX(j, j, n)] = sqrt(A[IDX(j, j, n)]);
+        for (i = j + 1; i < n; i++)
+            A[IDX(i, j, n)] /= A[IDX(j, j, n)];
+    }
+
+    return (0);
+}
+
+
+int
 main()
 {
     double *A;
@@ -56,7 +84,8 @@ main()
     A[IDX(2, 0, n)] = -16.0; A[IDX(2, 1, n)] = -43.0; A[IDX(2, 2, n)] = 98.0;
 
     double start_time = dclock();
-    int result = chol(A, 3);
+    int result = speed_chol(A, 3);
+//    int result = chol(A, 3);
     double end_time = dclock();
 
     if (result != 0) {
@@ -70,6 +99,7 @@ main()
             printf("\n");
         }
     }
+
 
     free(A);
     return 0;
