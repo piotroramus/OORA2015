@@ -52,7 +52,7 @@ int main(){
     } else {
         time = end_time - start_time;
         fprintf(stdout, "Execution time:\t\t\t\t %le\n", time);
-        fprintf(stdout, "GFLOPS:\t\t\t\t\t %f\n", gflops_prefix / time);
+        fprintf(stdout, "MFLOPS:\t\t\t\t\t %f\n", gflops_prefix / time);
     }
 
 
@@ -74,7 +74,7 @@ int main(){
     } else {
         time = end_time - start_time;
         fprintf(stdout, "Execution time:\t\t\t\t %le\n", time);
-        fprintf(stdout, "GFLOPS:\t\t\t\t\t %f\n", gflops_prefix / time);
+        fprintf(stdout, "MFLOPS:\t\t\t\t\t %f\n", gflops_prefix / time);
     }
 
     for (event_type = 0; event_type < 4; event_type++){
