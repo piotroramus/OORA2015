@@ -13,6 +13,12 @@
 
 #define IDX(i, j, n) (((j)+ (i)*(n)))
 
+
+int load_matrix(char* filename){
+
+}
+
+
 int
 chol(double *A, unsigned int n)
 {

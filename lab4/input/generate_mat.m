@@ -1,2 +1,5 @@
-A = random_cov(500);
-dlmwrite('input_matrix.txt',A)
+n = 1000;
+A = random_cov(n);
+
+output_file = sprintf('matrix_%dx%d.txt', n, n); 
+dlmwrite(output_file, A);
