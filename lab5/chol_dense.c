@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <immintrin.h>
 
 #include "chol_dense.h"
 #include "papi_template.h"
@@ -14,6 +15,8 @@
 
 
 #define IDX(i, j, n) (((j)+ (i)*(n)))
+
+//this way of IDX seems to be much slower than previous (without using SIMD instructions)
 //#define IDX(i, j, n) ( (i) * ((i) + 1) / 2 + (j) )
 
 
@@ -29,6 +32,8 @@ int main(){
     //processor specs:
     // http://www.cpu-world.com/CPUs/Core_i7/Intel-Core%20i7-3630QM%20Mobile%20processor.html
 
+    // useful article
+    // http://www.codeproject.com/Articles/874396/Crunching-Numbers-with-AVX-and-AVX
 
     double *A, *B, *C;
     int i, j, n, ret, result;
@@ -223,6 +228,7 @@ int simd_chol(double *A, unsigned int n){
     register unsigned int j;
     register unsigned int k;
     register unsigned int local_size = n;
+    register __m256d v1, v2, v3, v4, mul1, mul2, sum;
 
     for (j = 0; j < local_size; j++) {
         for (i = j; i < local_size; i++) {
@@ -231,15 +237,17 @@ int simd_chol(double *A, unsigned int n){
                 for (k = 0; k < j;) {
                     if (k < j - 8){
 
+                        v1 = _mm256_set_pd(A[IDX(i, k, local_size)], A[IDX(i, k + 1, local_size)], A[IDX(i, k + 2, local_size)], A[IDX(i, k + 3, local_size)]);
+                        v2 = _mm256_set_pd(A[IDX(j, k, local_size)], A[IDX(j, k + 1, local_size)], A[IDX(j, k + 2, local_size)], A[IDX(j, k + 3, local_size)]);
 
-                        Aij -= A[IDX(i, k, local_size)] * A[IDX(j, k, local_size)];
-                        Aij -= A[IDX(i, k + 1, local_size)] * A[IDX(j, k + 1, local_size)];
-                        Aij -= A[IDX(i, k + 2, local_size)] * A[IDX(j, k + 2, local_size)];
-                        Aij -= A[IDX(i, k + 3, local_size)] * A[IDX(j, k + 3, local_size)];
-                        Aij -= A[IDX(i, k + 4, local_size)] * A[IDX(j, k + 4, local_size)];
-                        Aij -= A[IDX(i, k + 5, local_size)] * A[IDX(j, k + 5, local_size)];
-                        Aij -= A[IDX(i, k + 6, local_size)] * A[IDX(j, k + 6, local_size)];
-                        Aij -= A[IDX(i, k + 7, local_size)] * A[IDX(j, k + 7, local_size)];
+                        v3 = _mm256_set_pd(A[IDX(i, k + 4, local_size)], A[IDX(i, k + 5, local_size)], A[IDX(i, k + 6, local_size)], A[IDX(i, k + 7, local_size)]);
+                        v4 = _mm256_set_pd(A[IDX(j, k + 4, local_size)], A[IDX(j, k + 5, local_size)], A[IDX(j, k + 6, local_size)], A[IDX(j, k + 7, local_size)]);
+                        mul1 = _mm256_mul_pd(v1, v2);
+                        mul2 = _mm256_mul_pd(v3, v4);
+
+                        sum = _mm256_add_pd(mul1, mul2);
+                        Aij -= (sum[3] + sum[2] + sum[1] + sum[0]);
+
                         k = k + 8;
                     } else {
                         Aij -= A[IDX(i, k, local_size)] * A[IDX(j, k, local_size)];
@@ -283,9 +291,10 @@ int simd_chol(double *A, unsigned int n){
 
 int assert_matrix_equality(double *A, double *B, int n){
     int i, j;
+    double epsilon = 0.0001;
     for (i = 0; i < n; i++)
-        for (j = 0; j <= i; j++)
-            if (A[IDX(i, j, n)] != B[IDX(i, j, n)])
+        for (j = 0; j < n; j++)
+            if (fabs(A[IDX(i, j, n)] - B[IDX(i, j, n)]) > epsilon)
                 return 1;
     return 0;
 }
