@@ -20,9 +20,9 @@
 //#define IDX(i, j, n) ( (i) * ((i) + 1) / 2 + (j) )
 
 
-int chol(double *A, unsigned int n);
-int speed_chol(double *A, unsigned int n);
-int simd_chol(double *A, unsigned int n);
+int chol(double *A, int n);
+int speed_chol(double *A, int n);
+int simd_chol(double *A, int n);
 int assert_matrix_equality(double *A, double *B, int n);
 double* load_matrix(char* filename, int n);
 
@@ -133,7 +133,7 @@ int main(){
 }
 
 
-int chol(double *A, unsigned int n){
+int chol(double *A, int n){
 
     unsigned int i;
     unsigned int j;
@@ -160,12 +160,12 @@ int chol(double *A, unsigned int n){
 }
 
 
-int speed_chol(double *A, unsigned int n){
+int speed_chol(double *A, int n){
 
     register unsigned int i;
     register unsigned int j;
     register unsigned int k;
-    register unsigned int local_size = n;
+    register int local_size = n;
 
     for (j = 0; j < local_size; j++) {
         for (i = j; i < local_size; i++) {
@@ -222,12 +222,12 @@ int speed_chol(double *A, unsigned int n){
 }
 
 
-int simd_chol(double *A, unsigned int n){
+int simd_chol(double *A, int n){
 
-    register unsigned int i;
-    register unsigned int j;
-    register unsigned int k;
-    register unsigned int local_size = n;
+    register  int i;
+    register  int j;
+    register  int k;
+    register  int local_size = n;
     register __m256d v1, v2, v3, v4, mul1, mul2, sum;
 
     for (j = 0; j < local_size; j++) {
@@ -237,12 +237,13 @@ int simd_chol(double *A, unsigned int n){
                 for (k = 0; k < j;) {
                     if (k < j - 8){
 
-                        v1 = _mm256_set_pd(A[IDX(i, k, local_size)], A[IDX(i, k + 1, local_size)], A[IDX(i, k + 2, local_size)], A[IDX(i, k + 3, local_size)]);
-                        v2 = _mm256_set_pd(A[IDX(j, k, local_size)], A[IDX(j, k + 1, local_size)], A[IDX(j, k + 2, local_size)], A[IDX(j, k + 3, local_size)]);
-
-                        v3 = _mm256_set_pd(A[IDX(i, k + 4, local_size)], A[IDX(i, k + 5, local_size)], A[IDX(i, k + 6, local_size)], A[IDX(i, k + 7, local_size)]);
-                        v4 = _mm256_set_pd(A[IDX(j, k + 4, local_size)], A[IDX(j, k + 5, local_size)], A[IDX(j, k + 6, local_size)], A[IDX(j, k + 7, local_size)]);
+                        v1 = _mm256_loadu_pd(A+IDX(i, k, local_size));
+                        v2 = _mm256_loadu_pd(A+IDX(j, k, local_size));
                         mul1 = _mm256_mul_pd(v1, v2);
+
+                        v3 = _mm256_loadu_pd(A+IDX(i, k + 4, local_size));
+                        v4 = _mm256_loadu_pd(A+IDX(j, k + 4, local_size));
+
                         mul2 = _mm256_mul_pd(v3, v4);
 
                         sum = _mm256_add_pd(mul1, mul2);

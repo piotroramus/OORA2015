@@ -17,7 +17,7 @@
 #include "papi_template.h"
 
 
-int measure(int (*f)(double *A, unsigned int n), double *A, unsigned int n, int event) {
+int measure(int (*f)(double *A, int n), double *A, int n, int event) {
 
     /* force program to run on a single CPU */
     cpu_set_t my_set;        /* Define your cpu_set bit mask. */
